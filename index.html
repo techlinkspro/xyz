@@ -624,28 +624,12 @@
       catch { return (url || "").toLowerCase(); }
     }
 
-    /** Main entry — classify a URL string. */
+      /** Main entry — classify a URL string. */
     function parseMedia(input) {
       const raw = (input || "").trim();
       if (!raw) return { type: "unknown", raw, src: "", id: null, label: "Empty" };
 
-      // 🔥 HYBRID: High security sites ke liye Smart Embed Bypass (Sandbox jail ke andar)
-      if (raw.includes("viewkey=")) {
-        try {
-          const u = new URL(raw);
-          const viewkey = u.searchParams.get("viewkey");
-          if (viewkey) {
-            return { type: "native-embed", raw, src: `https://www.pornhub.com/embed/${viewkey}`, id: viewkey, label: "Native Embed" };
-          }
-        } catch(e) {}
-      }
-
-      if (raw.toLowerCase().includes("<iframe")) {
-        const match = raw.match(/src=["']([^"']+)["']/i);
-        if (match && match[1]) {
-          return { type: "native-embed", raw, src: match[1], id: null, label: "Web Embed" };
-        }
-      }
+      // 🔥 HYBRID WALA BLOCK HATA DIYA! AB SAB KUCH PROXY KE PAAS JAYEGA 🔥
 
       const yt = extractYouTubeId(raw);
       if (yt) return { type: "youtube", raw, src: buildYouTubeEmbed(yt), id: yt, label: "YouTube" };
@@ -662,13 +646,14 @@
       try {
         const u = new URL(raw);
         if (u.protocol === "http:" || u.protocol === "https:") {
-          // Baaki sab normal links ke liye hamara yt-dlp Backend Proxy chalega
+          // Ab har external link seedha tumhare naye backend proxy par jayega!
           return { type: "iframe", raw, src: raw, id: null, label: "External Link" };
         }
       } catch {}
 
       return { type: "unknown", raw, src: "", id: null, label: "Unknown" };
     }
+
 
     class PlayerController {
       constructor({ video, embed, on = {} }) {

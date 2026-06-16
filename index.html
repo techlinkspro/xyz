@@ -1104,7 +1104,7 @@
       urlInput.addEventListener("input", () => { clearBtn.hidden = urlInput.value.length === 0; });
       clearBtn.addEventListener("click", () => { urlInput.value = ""; clearBtn.hidden = true; urlInput.focus(); });
 
-      async function loadFromInput(value) {
+            async function loadFromInput(value) {
         let media = parseMedia(value);
         if (media.type === "unknown" || !media.src) {
           ui._showError("Couldn't read that link", "Make sure it's a valid video URL.");
@@ -1116,26 +1116,17 @@
         ui._hideState();
 
         try {
-          if (media.type === "iframe") {
-            ui.setTitle("Extracting direct video link...");
-            try {
-              const res = await fetch(`https://aurora-backend-tu8d.onrender.com/extract?url=${encodeURIComponent(media.src)}`);
-              const data = await res.json();
-              if (data.success) {
-                media.type = data.rawVideoUrl.includes('.m3u8') ? 'hls' : 'file';
-                media.src = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.rawVideoUrl)}`;
-                ui.setTitle("Video Extracted & Proxied!");
-              } else {
-                throw new Error("Backend couldn't extract the video.");
-              }
-            } catch (backendError) {
-               ui._showSpinner(false);
-               ui._showError("Extraction Blocked", "The server couldn't bypass this site's security. Try a direct link or embed code.");
-               return; // Agar backend block hua toh execution yahi rok do
-            }
+          // CF Worker Proxy Logic
+          if (media.type === "iframe" || media.type === "hls" || media.type === "file") {
+            // YAHAN APNA CLOUDFLARE WORKER KA URL DAALNA HAI
+            const CF_WORKER_URL = "https://curly-unit-7217.vifonain.workers.dev/";
+            
+            // Direct link ko CF Worker ke through pass kar rahe hain
+            media.src = `${CF_WORKER_URL}/?url=${encodeURIComponent(media.raw)}`;
+            ui.setTitle("Proxied via Cloudflare ⚡");
           }
 
-          // Ab player load karo (Agar "native-embed" hai, toh seedha iframe load ho jayega)
+          // Ab player load karo
           await player.load(media);
 
           if (media.type === "file" || media.type === "hls") {

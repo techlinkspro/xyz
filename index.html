@@ -580,21 +580,32 @@
                     const response = await fetch(backendUrl);
                     const data = await response.json();
 
-                                        if (data.success) {
-                        // ERROR FIX: Asli link ko direct chalane ki jagah hum apne 
-                        // Render Proxy (/play) ke through chalayenge taaki CORS bypass ho jaye!
-                        const proxyUrl = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.url)}`;
+                                                            if (data.success) {
+                        videoQualities = {};
                         
-                        // Populate quality logic dynamically
-                        videoQualities = { 'Default': proxyUrl };
-                        currentQuality = 'Default';
+                        // NAYA LOGIC: Agar backend ne bohot saari qualities bheji hain
+                        if (data.urls && Object.keys(data.urls).length > 0) {
+                            for (let q in data.urls) {
+                                // Har quality ke aage apna Proxy laga do
+                                videoQualities[q] = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.urls[q])}`;
+                            }
+                        } 
+                        // PURANA LOGIC: Agar direct link hai jisme multiple quality nahi hai
+                        else if (data.url) { 
+                            videoQualities['Auto'] = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.url)}`;
+                        }
+
+                        // Quality list me se sabse highest wali ko by default chala do
+                        const availableQualities = Object.keys(videoQualities);
+                        currentQuality = availableQualities[availableQualities.length - 1]; 
                         
-                        video.src = proxyUrl; 
-                        renderQualityOptions(); // Render UI for quality
+                        video.src = videoQualities[currentQuality]; 
+                        renderQualityOptions(); 
 
                         videoTitle.textContent = "Playing Video ID: " + videoId;
                         isVideoLoaded = true;
                     
+
 
                     } else {
                         throw new Error(data.error);

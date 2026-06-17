@@ -580,16 +580,22 @@
                     const response = await fetch(backendUrl);
                     const data = await response.json();
 
-                    if (data.success) {
+                                        if (data.success) {
+                        // ERROR FIX: Asli link ko direct chalane ki jagah hum apne 
+                        // Render Proxy (/play) ke through chalayenge taaki CORS bypass ho jaye!
+                        const proxyUrl = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.url)}`;
+                        
                         // Populate quality logic dynamically
-                        videoQualities = { 'Default': data.url };
+                        videoQualities = { 'Default': proxyUrl };
                         currentQuality = 'Default';
                         
-                        video.src = data.url; 
+                        video.src = proxyUrl; 
                         renderQualityOptions(); // Render UI for quality
 
                         videoTitle.textContent = "Playing Video ID: " + videoId;
                         isVideoLoaded = true;
+                    }
+
                     } else {
                         throw new Error(data.error);
                     }

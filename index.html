@@ -41,7 +41,7 @@
             position: relative;
             width: 100%;
             max-width: 900px;
-            aspect-ratio: 16 / 9;
+            aspect-ratio: 16 / 9; 
             background: #000;
             border-radius: 16px;
             overflow: hidden;
@@ -436,11 +436,9 @@
                         </svg>
                     </button>
 
-                    <!-- CLEANED UP VOLUME BUTTON (NO SLIDER) -->
                     <button class="ctrl-btn" id="volumeBtn" title="Mute/Unmute">
                         <svg viewBox="0 0 24 24" fill="currentColor" id="volumeIcon">
-                            <!-- Volume path updated dynamically -->
-                        </svg>
+                            </svg>
                     </button>
 
                     <div class="time-display">
@@ -498,14 +496,38 @@
         const skipBadgeLeft = document.getElementById('skipBadgeLeft');
         const skipBadgeRight = document.getElementById('skipBadgeRight');
 
-        let lastVolume = 1; // Default memory volume
+        let lastVolume = 1; 
         let hideControlsTimer;
         let isVideoLoaded = false; 
         let isSeeking = false; 
 
-        // Quality Tracking Variables
         let videoQualities = {};
         let currentQuality = '';
+
+        // ==========================================
+        // SMART SPINNER & BUFFERING LOGIC (NAYA FIX)
+        // ==========================================
+        video.addEventListener('loadstart', () => {
+            loadingSpinner.style.display = 'block';
+            centerBtn.style.display = 'none';
+        });
+
+        // Jab video internet slow hone ki wajah se atke (buffer ho)
+        video.addEventListener('waiting', () => {
+            loadingSpinner.style.display = 'block';
+            centerBtn.style.display = 'none';
+        });
+
+        // Jab video chalne ke liye data load kar chuka ho
+        video.addEventListener('canplay', () => {
+            loadingSpinner.style.display = 'none';
+            if(video.paused) centerBtn.style.display = 'flex';
+        });
+
+        // Jab video asal me play hone lage
+        video.addEventListener('playing', () => {
+            loadingSpinner.style.display = 'none';
+        });
 
         // ==========================================
         // SMART QUALITY RENDER LOGIC
@@ -561,6 +583,7 @@
 
             if (videoId) {
                 try {
+                    // Spinner yahan on hoga
                     loadingSpinner.style.display = 'block';
                     centerBtn.style.display = 'none';
                     videoTitle.textContent = ""; 
@@ -570,8 +593,8 @@
                     const response = await fetch(backendUrl);
                     const data = await response.json();
 
-                    loadingSpinner.style.display = 'none';
-                    centerBtn.style.display = 'flex';
+                    // Yahan se spinner 'none' karne ka logic hata diya gaya hai.
+                    // Ab spinner tabhi gayab hoga jab 'video' tag khud bolega ki wo ready hai.
 
                     if (data.success) {
                         videoQualities = {};
@@ -595,6 +618,7 @@
                         isVideoLoaded = true;
 
                     } else {
+                        loadingSpinner.style.display = 'none'; // Error aane par gayab karna padega
                         throw new Error(data.error);
                     }
                 } catch (error) {
@@ -682,6 +706,7 @@
                 errorMessage.style.display = 'block';
                 errorMessage.textContent = 'Error: Video load nahi ho paayi.';
                 isVideoLoaded = false;
+                loadingSpinner.style.display = 'none';
             }
         });
 

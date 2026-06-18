@@ -41,7 +41,7 @@
             position: relative;
             width: 100%;
             max-width: 900px;
-            aspect-ratio: 16 / 9; /* PLAYER KO SHIKUDNE SE ROKNE WALI PROPERTY */
+            aspect-ratio: 16 / 9;
             background: #000;
             border-radius: 16px;
             overflow: hidden;
@@ -56,7 +56,7 @@
 
         video {
             width: 100%;
-            height: 100%; /* VIDEO KO PLAYER MEIN FIT RAKHNE KE LIYE */
+            height: 100%; 
             display: block;
             user-select: none;
             object-fit: contain;
@@ -79,7 +79,7 @@
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            display: none; /* By default chhipa rahega */
+            display: none; 
             z-index: 20;
         }
 
@@ -293,45 +293,11 @@
             font-weight: 400;
             letter-spacing: 0.3px;
             user-select: none;
+            margin-left: 4px;
         }
 
         .time-display .current {
             color: #ffffff;
-        }
-
-        /* Volume Slider */
-        .volume-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .volume-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 0;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 3px;
-            outline: none;
-            cursor: pointer;
-            transition: width 0.25s ease, opacity 0.25s ease;
-            opacity: 0;
-        }
-
-        .volume-group:hover .volume-slider {
-            width: 70px;
-            opacity: 1;
-        }
-
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #fff;
-            cursor: pointer;
-            box-shadow: 0 0 4px rgba(0,0,0,0.3);
         }
 
         /* 5s Skip Badges */
@@ -470,13 +436,12 @@
                         </svg>
                     </button>
 
-                    <div class="volume-group">
-                        <button class="ctrl-btn" id="volumeBtn" title="Mute">
-                            <svg viewBox="0 0 24 24" fill="currentColor" id="volumeIcon">
-                                </svg>
-                        </button>
-                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0" />
-                    </div>
+                    <!-- CLEANED UP VOLUME BUTTON (NO SLIDER) -->
+                    <button class="ctrl-btn" id="volumeBtn" title="Mute/Unmute">
+                        <svg viewBox="0 0 24 24" fill="currentColor" id="volumeIcon">
+                            <!-- Volume path updated dynamically -->
+                        </svg>
+                    </button>
 
                     <div class="time-display">
                         <span class="current" id="currentTime">0:00</span>
@@ -519,7 +484,6 @@
         const durationEl = document.getElementById('duration');
         const volumeBtn = document.getElementById('volumeBtn');
         const volumeIcon = document.getElementById('volumeIcon');
-        const volumeSlider = document.getElementById('volumeSlider');
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
         
@@ -832,27 +796,18 @@
         });
 
         // ==========================================
-        // VOLUME & MUTE LOGIC (NEW PERFECT SYSTEM)
+        // SINGLE BUTTON MUTE LOGIC (NO SLIDER)
         // ==========================================
-        updateVolumeIcon(); // Shuruat mein hi Muted icon dikhane ke liye
-
-        volumeSlider.addEventListener('input', () => {
-            video.muted = false; 
-            video.volume = parseFloat(volumeSlider.value);
-            if(video.volume > 0) lastVolume = video.volume;
-            updateVolumeIcon();
-        });
+        updateVolumeIcon(); 
 
         volumeBtn.addEventListener('click', () => {
             if (video.muted || video.volume === 0) {
                 video.muted = false;
                 video.volume = lastVolume > 0 ? lastVolume : 1;
-                volumeSlider.value = video.volume;
             } 
             else {
                 lastVolume = video.volume > 0 ? video.volume : 1;
                 video.volume = 0;
-                volumeSlider.value = 0;
                 video.muted = true;
             }
             updateVolumeIcon();
@@ -943,13 +898,11 @@
                     e.preventDefault();
                     if(video.muted) video.muted = false;
                     video.volume = Math.min(1, video.volume + 0.05);
-                    volumeSlider.value = video.volume;
                     updateVolumeIcon();
                     break;
                 case 'ArrowDown':
                     e.preventDefault();
                     video.volume = Math.max(0, video.volume - 0.05);
-                    volumeSlider.value = video.volume;
                     updateVolumeIcon();
                     break;
                 case 'f':

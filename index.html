@@ -973,6 +973,27 @@ video.addEventListener('contextmenu', (e) => {
     return false;
 }, false);
 
+
+                // ==========================================
+        // TIKTOK/REELS AUTOPLAY SOUND TRICK
+        // Jaise hi user pehli baar screen par touch karega, Mute hat jayega!
+        // ==========================================
+        const unmuteOnFirstTap = () => {
+            if (video.muted) {
+                video.muted = false; // Video ki aawaz khol do
+                video.volume = 1;    // Volume full kar do
+                volumeSlider.value = 1; 
+                updateVolumeIcon();  // UI mein volume icon update kar do
+            }
+            // Pehle touch ke baad is trick ko hata do taaki baar-baar disturb na kare
+            document.removeEventListener('pointerdown', unmuteOnFirstTap);
+            document.removeEventListener('keydown', unmuteOnFirstTap);
+        };
+
+        // Screen par touch karne ya koi button dabane ka wait karo
+        document.addEventListener('pointerdown', unmuteOnFirstTap);
+        document.addEventListener('keydown', unmuteOnFirstTap);
+
     </script>
 </body>
 </html>

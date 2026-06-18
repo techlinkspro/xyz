@@ -41,6 +41,7 @@
             position: relative;
             width: 100%;
             max-width: 900px;
+            aspect-ratio: 16 / 9; /* PLAYER KO SHIKUDNE SE ROKNE WALI PROPERTY */
             background: #000;
             border-radius: 16px;
             overflow: hidden;
@@ -55,12 +56,35 @@
 
         video {
             width: 100%;
+            height: 100%; /* VIDEO KO PLAYER MEIN FIT RAKHNE KE LIYE */
             display: block;
             user-select: none;
+            object-fit: contain;
         }
         
         .player-wrapper.show-controls video {
             cursor: pointer;
+        }
+
+        /* LOADING SPINNER */
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 48px;
+            height: 48px;
+            margin-top: -24px;
+            margin-left: -24px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none; /* By default chhipa rahega */
+            z-index: 20;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Title */
@@ -397,7 +421,9 @@
     <div id="errorMessage"></div>
 
     <div class="player-wrapper show-controls" id="playerWrapper">
-        <div class="video-title" id="videoTitle">Loading...</div>
+        <div class="loading-spinner" id="loadingSpinner"></div>
+
+        <div class="video-title" id="videoTitle"></div>
 
         <div class="skip-badge left" id="skipBadgeLeft">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
@@ -485,6 +511,7 @@
         const playIcon = document.getElementById('playIcon');
         const centerBtn = document.getElementById('centerBtn');
         const centerIcon = document.getElementById('centerIcon');
+        const loadingSpinner = document.getElementById('loadingSpinner'); // NAYA SELECTOR
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
         const bufferBar = document.getElementById('bufferBar');
@@ -564,15 +591,18 @@
         }
 
         // ==========================================
-        // FETCH FROM RENDER BACKEND (5-CHARACTER ID)
+        // FETCH FROM RENDER BACKEND
         // ==========================================
         async function loadVideoFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
-            const videoId = urlParams.get('v'); // URL se ID uthayega (e.g., ?v=1xkLw)
+            const videoId = urlParams.get('v'); // URL se ID uthayega
 
             if (videoId) {
                 try {
-                    videoTitle.textContent = "Loading from Server...";
+                    // SPINNER CHALU AUR CENTER BUTTON GAYAB
+                    loadingSpinner.style.display = 'block';
+                    centerBtn.style.display = 'none';
+                    videoTitle.textContent = ""; 
                     
                     // Fetching from your Render backend
                     const backendUrl = `https://aurora-backend-tu8d.onrender.com/api/video/${videoId}`;
@@ -580,7 +610,11 @@
                     const response = await fetch(backendUrl);
                     const data = await response.json();
 
-                                                            if (data.success) {
+                    // SERVER RESPONSE AANE PE SPINNER GAYAB AUR BUTTON WAPAS
+                    loadingSpinner.style.display = 'none';
+                    centerBtn.style.display = 'flex';
+
+                    if (data.success) {
                         videoQualities = {};
                         
                         // NAYA LOGIC: Agar backend ne bohot saari qualities bheji hain
@@ -604,13 +638,13 @@
 
                         videoTitle.textContent = "Playing Video ID: " + videoId;
                         isVideoLoaded = true;
-                    
-
 
                     } else {
                         throw new Error(data.error);
                     }
                 } catch (error) {
+                    loadingSpinner.style.display = 'none';
+                    centerBtn.style.display = 'flex';
                     errorMessage.style.display = 'block';
                     errorMessage.textContent = 'Backend Error: ' + error.message;
                     videoTitle.textContent = "Error Loading Video";

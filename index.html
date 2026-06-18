@@ -966,6 +966,11 @@
             centerIcon.innerHTML = playSvg;
             playerWrapper.classList.add('show-controls');
         });
+// Video par right click ya long press block karne ke liye
+video.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+}, false);
 
     </script>
 </body>

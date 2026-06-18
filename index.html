@@ -530,11 +530,17 @@
         });
 
         // ==========================================
-        // SMART QUALITY RENDER LOGIC
+        // SMART QUALITY RENDER LOGIC (SORT FIX)
         // ==========================================
         function renderQualityOptions() {
             qualityMenu.innerHTML = ''; 
-            const qualities = Object.keys(videoQualities);
+            
+            // NAYA FIX: Qualities ko High se Low sort karne ka magic
+            const qualities = Object.keys(videoQualities).sort((a, b) => {
+                if (a === 'Auto' || a === 'Default') return 1; // Auto ko sabse neeche rakho
+                if (b === 'Auto' || b === 'Default') return -1;
+                return parseInt(b) - parseInt(a); // Numbers ko ulte kram (descending) me lagao
+            });
             
             if(qualities.length === 0) {
                 qualityBtn.style.display = 'none'; 

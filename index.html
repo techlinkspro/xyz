@@ -535,11 +535,11 @@
         function renderQualityOptions() {
             qualityMenu.innerHTML = ''; 
             
-            // NAYA FIX: Qualities ko High se Low sort karne ka magic
+            // Qualities ko High se Low sort karne ka magic
             const qualities = Object.keys(videoQualities).sort((a, b) => {
-                if (a === 'Auto' || a === 'Default') return 1; // Auto ko sabse neeche rakho
+                if (a === 'Auto' || a === 'Default') return 1; 
                 if (b === 'Auto' || b === 'Default') return -1;
-                return parseInt(b) - parseInt(a); // Numbers ko ulte kram (descending) me lagao
+                return parseInt(b) - parseInt(a); 
             });
             
             if(qualities.length === 0) {
@@ -581,7 +581,7 @@
         }
 
         // ==========================================
-        // FETCH FROM RENDER BACKEND
+        // FETCH FROM RENDER BACKEND (CLOUDFLARE ROUTING)
         // ==========================================
         async function loadVideoFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -594,24 +594,24 @@
                     centerBtn.style.display = 'none';
                     videoTitle.textContent = ""; 
                     
+                    // JSON link extraction toh ab bhi Render hi karega
                     const backendUrl = `https://aurora-backend-tu8d.onrender.com/api/video/${videoId}`;
                     
                     const response = await fetch(backendUrl);
                     const data = await response.json();
-
-                    // Yahan se spinner 'none' karne ka logic hata diya gaya hai.
-                    // Ab spinner tabhi gayab hoga jab 'video' tag khud bolega ki wo ready hai.
 
                     if (data.success) {
                         videoQualities = {};
                         
                         if (data.urls && Object.keys(data.urls).length > 0) {
                             for (let q in data.urls) {
-                                videoQualities[q] = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.urls[q])}`;
+                                // ❤️ NAYA CLOUDFLARE WORKER PROXY YAHAN HAI ❤️
+                                videoQualities[q] = `https://bitter-rice-28e5.vifonain.workers.dev/?url=${encodeURIComponent(data.urls[q])}`;
                             }
                         } 
                         else if (data.url) { 
-                            videoQualities['Auto'] = `https://aurora-backend-tu8d.onrender.com/play?url=${encodeURIComponent(data.url)}`;
+                            // ❤️ NAYA CLOUDFLARE WORKER PROXY YAHAN BHI HAI ❤️
+                            videoQualities['Auto'] = `https://bitter-rice-28e5.vifonain.workers.dev/?url=${encodeURIComponent(data.url)}`;
                         }
 
                         const availableQualities = Object.keys(videoQualities);
@@ -624,7 +624,7 @@
                         isVideoLoaded = true;
 
                     } else {
-                        loadingSpinner.style.display = 'none'; // Error aane par gayab karna padega
+                        loadingSpinner.style.display = 'none'; 
                         throw new Error(data.error);
                     }
                 } catch (error) {

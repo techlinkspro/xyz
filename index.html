@@ -505,37 +505,33 @@
         let currentQuality = '';
 
         // ==========================================
-        // SMART SPINNER & BUFFERING LOGIC (NAYA FIX)
+        // SMART SPINNER & BUFFERING LOGIC 
         // ==========================================
         video.addEventListener('loadstart', () => {
             loadingSpinner.style.display = 'block';
             centerBtn.style.display = 'none';
         });
 
-        // Jab video internet slow hone ki wajah se atke (buffer ho)
         video.addEventListener('waiting', () => {
             loadingSpinner.style.display = 'block';
             centerBtn.style.display = 'none';
         });
 
-        // Jab video chalne ke liye data load kar chuka ho
         video.addEventListener('canplay', () => {
             loadingSpinner.style.display = 'none';
             if(video.paused) centerBtn.style.display = 'flex';
         });
 
-        // Jab video asal me play hone lage
         video.addEventListener('playing', () => {
             loadingSpinner.style.display = 'none';
         });
 
         // ==========================================
-        // SMART QUALITY RENDER LOGIC (SORT FIX)
+        // SMART QUALITY RENDER LOGIC
         // ==========================================
         function renderQualityOptions() {
             qualityMenu.innerHTML = ''; 
             
-            // Qualities ko High se Low sort karne ka magic
             const qualities = Object.keys(videoQualities).sort((a, b) => {
                 if (a === 'Auto' || a === 'Default') return 1; 
                 if (b === 'Auto' || b === 'Default') return -1;
@@ -581,20 +577,38 @@
         }
 
         // ==========================================
-        // FETCH FROM RENDER BACKEND (CLOUDFLARE ROUTING)
+        // FETCH FROM RENDER BACKEND YA DIRECT LINK (CLOUDFLARE ROUTING)
         // ==========================================
         async function loadVideoFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const videoId = urlParams.get('v'); 
+            const directLink = urlParams.get('link'); // 🔥 NAYA: Google Drive ya kisi bhi direct link ke liye
 
-            if (videoId) {
+            // 1. AGAR URL MEIN DIRECT LINK HAI (?link=...)
+            if (directLink) {
+                loadingSpinner.style.display = 'block';
+                centerBtn.style.display = 'none';
+                
+                // Google Drive CORS error na de, isliye isko bhi direct Cloudflare Worker se nikal rahe hain!
+                const proxyUrl = `https://bitter-rice-28e5.vifonain.workers.dev/?url=${encodeURIComponent(directLink)}`;
+                
+                videoQualities = { 'Auto': proxyUrl };
+                currentQuality = 'Auto';
+                video.src = videoQualities[currentQuality];
+                renderQualityOptions();
+                
+                videoTitle.textContent = "Playing Custom Drive Link";
+                isVideoLoaded = true;
+                return;
+            }
+
+            // 2. AGAR URL MEIN VIDEO ID HAI (?v=...)
+            else if (videoId) {
                 try {
-                    // Spinner yahan on hoga
                     loadingSpinner.style.display = 'block';
                     centerBtn.style.display = 'none';
                     videoTitle.textContent = ""; 
                     
-                    // JSON link extraction toh ab bhi Render hi karega
                     const backendUrl = `https://aurora-backend-tu8d.onrender.com/api/video/${videoId}`;
                     
                     const response = await fetch(backendUrl);
@@ -605,12 +619,10 @@
                         
                         if (data.urls && Object.keys(data.urls).length > 0) {
                             for (let q in data.urls) {
-                                // ❤️ NAYA CLOUDFLARE WORKER PROXY YAHAN HAI ❤️
                                 videoQualities[q] = `https://bitter-rice-28e5.vifonain.workers.dev/?url=${encodeURIComponent(data.urls[q])}`;
                             }
                         } 
                         else if (data.url) { 
-                            // ❤️ NAYA CLOUDFLARE WORKER PROXY YAHAN BHI HAI ❤️
                             videoQualities['Auto'] = `https://bitter-rice-28e5.vifonain.workers.dev/?url=${encodeURIComponent(data.url)}`;
                         }
 
@@ -634,9 +646,12 @@
                     errorMessage.textContent = 'Backend Error: ' + error.message;
                     videoTitle.textContent = "Error Loading Video";
                 }
-            } else {
+            } 
+            
+            // 3. AGAR KUCH NAHI MILA
+            else {
                 errorMessage.style.display = 'block';
-                errorMessage.textContent = 'Koi video link nahi mila. Format: ?v=1xkLw';
+                errorMessage.textContent = 'Koi video link nahi mila. Format: ?v=ID ya ?link=URL';
                 videoTitle.textContent = "No Video Found";
                 
                 videoQualities = { 'Demo 480p': 'https://www.w3schools.com/html/mov_bbb.mp4' };
